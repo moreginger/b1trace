@@ -1,8 +1,16 @@
 -- This example uses the included Box2D (love.physics) plugin!!
 
 local sti = require "sti"
+local Gamestate = require "hump.gamestate"
+
+local game = {};
 
 function love.load()
+    Gamestate.registerEvents()
+    Gamestate.switch(game)
+end
+
+function game:enter()
 	-- Grab window size
 	windowWidth  = love.graphics.getWidth()
 	windowHeight = love.graphics.getHeight()
@@ -11,19 +19,19 @@ function love.load()
 	love.physics.setMeter(32)
 
 	-- Load a map exported to Lua from Tiled
-	map = sti("assets/maps/map.lua", { "box2d" })
+	self.map = sti("assets/maps/map.lua", { "box2d" })
 
 	-- Prepare physics world with horizontal and vertical gravity
 	world = love.physics.newWorld(0, 0)
 
 	-- Prepare collision objects
-	map:box2d_init(world)
+	self.map:box2d_init(world)
 
 	-- Create a Custom Layer
-	map:addCustomLayer("Sprite Layer", 3)
+	self.map:addCustomLayer("Sprite Layer", 3)
 
 	-- Add data to Custom Layer
-	local spriteLayer = map.layers["Sprite Layer"]
+	local spriteLayer = self.map.layers["Sprite Layer"]
 	spriteLayer.sprites = {
 		player = {
 			image = love.graphics.newImage("assets/sprites/Porsche_911/sprite.png"),
@@ -51,22 +59,18 @@ function love.load()
 	end
 end
 
-function love.update(dt)
-	map:update(dt)
+function game:update(dt)
+	self.map:update(dt)
 end
 
-function love.draw()
+function game:draw()
     tx, ty = 0
     s = 2
 	-- Draw the map and all objects within
 	love.graphics.setColor(255, 255, 255)
-	map:draw(tx, ty, s)
+	self.map:draw(tx, ty, s)
 
 	-- Draw Collision Map (useful for debugging)
 	love.graphics.setColor(255, 0, 0)
-	map:box2d_draw(tx, ty, s)
-
-	-- Please note that map:draw, map:box2d_draw, and map:bump_draw take
-	-- translate and scale arguments (tx, ty, sx, sy) for when you want to
-	-- grow, shrink, or reposition your map on screen.
+	self.map:box2d_draw(tx, ty, s)
 end
