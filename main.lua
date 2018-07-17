@@ -3,11 +3,33 @@
 local sti = require "sti"
 local Gamestate = require "hump.gamestate"
 
+require('player')
+
 local game = {};
 
 function love.load()
     Gamestate.registerEvents()
     Gamestate.switch(game)
+end
+
+function game:init()
+    self.players = {}
+    self.players['p1'] = Player:new({
+		x = 256,
+		y = 12,
+		r = - math.pi / 2,
+	})
+
+    self.bindings = {
+        p1 = function() self.players['p1']:control() end,
+    }
+    self.keys = {
+    }
+    self.keysReleased = {
+        space = "p1",
+    }
+    self.buttons = {}
+    self.buttonsReleased = {}
 end
 
 function game:enter()
@@ -35,15 +57,19 @@ function game:enter()
 	spriteLayer.sprites = {
 		player = {
 			image = love.graphics.newImage("assets/sprites/Porsche_911/sprite.png"),
-			x = 256,
-			y = 12,
-			r = 0,
+			-- TODO useful to set xyz here?
+			-- x = 0,
+			-- y = 0,
+			-- r = 0,
 		}
 	}
+
+	local players = self.players; -- TODO: Work out where to store this, in layer or what?
 
 	-- Update callback for Custom Layer
 	function spriteLayer:update(dt)
 		for _, sprite in pairs(self.sprites) do
+			players['p1']:update(dt)
 			-- sprite.r = sprite.r + math.rad(90 * dt)
 		end
 	end
@@ -51,12 +77,35 @@ function game:enter()
 	-- Draw callback for Custom Layer
 	function spriteLayer:draw()
 		for _, sprite in pairs(self.sprites) do
-			local x = math.floor(sprite.x)
-			local y = math.floor(sprite.y)
-			-- local r = sprite.r
-			love.graphics.draw(sprite.image, x, y, math.pi / 2, 0.1, 0.1)
+			local p = players['p1'];
+			love.graphics.draw(sprite.image, p.x, p.y, p.r, 0.1, 0.1, sprite.image:getWidth() / 2, sprite.image:getHeight() / 2)
 		end
 	end
+end
+
+function game:inputHandler(input)
+    local action = self.bindings[input]
+    if action then return action() end
+end
+
+function game:keypressed(k)
+    local binding = self.keys[k]
+    return self:inputHandler(binding)
+end
+
+function game:keyreleased(k)
+    local binding = self.keysReleased[k]
+    return self:inputHandler(binding)
+end
+
+function game:gamepadpressed(gamepad, button)
+    local binding = self.buttons[button]
+    return self:inputHandler(binding)
+end
+
+function game:gamepadreleased(gamepad, button)
+    local binding = self.buttonsReleased[button]
+    return self:inputHandler(binding)
 end
 
 function game:update(dt)
