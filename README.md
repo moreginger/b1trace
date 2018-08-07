@@ -35,4 +35,6 @@ Resources
 
 + http://lua.space/gamedev/using-tiled-maps-in-love
  + https://www.mapeditor.org/
+ + Remember to **pay for it**!
 + http://lua.space/gamedev/handling-input-in-lua
+* http://www.iforce2d.net/b2dtut/top-down-car

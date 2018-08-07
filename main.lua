@@ -3,7 +3,8 @@
 local sti = require "sti"
 local Gamestate = require "hump.gamestate"
 
-require('player')
+local Tyre = require 'tyre'
+local Player = require 'player'
 
 local game = {};
 
@@ -13,12 +14,15 @@ function love.load()
 end
 
 function game:init()
-    self.players = {}
-    self.players['p1'] = Player:new({
-		x = 256,
-		y = 12,
-		r = - math.pi / 2,
+	love.physics.setMeter(32)
+	self.world = love.physics.newWorld(0, 0, true)
+	self.players = {}
+	local player = Player:new({
+		tyre = Tyre:new(),
 	})
+	player:init(self.world)
+	player:draw()
+	self.players['p1'] = player
 
     self.bindings = {
         p1 = function() self.players['p1']:control() end,
@@ -37,17 +41,11 @@ function game:enter()
 	windowWidth  = love.graphics.getWidth()
 	windowHeight = love.graphics.getHeight()
 
-	-- Set world meter size (in pixels)
-	love.physics.setMeter(32)
-
 	-- Load a map exported to Lua from Tiled
 	self.map = sti("assets/maps/map.lua", { "box2d" })
 
-	-- Prepare physics world with horizontal and vertical gravity
-	world = love.physics.newWorld(0, 0)
-
 	-- Prepare collision objects
-	self.map:box2d_init(world)
+	self.map:box2d_init(self.world)
 
 	-- Create a Custom Layer
 	self.map:addCustomLayer("Sprite Layer", 3)
@@ -78,7 +76,7 @@ function game:enter()
 	function spriteLayer:draw()
 		for _, sprite in pairs(self.sprites) do
 			local p = players['p1'];
-			love.graphics.draw(sprite.image, p.x, p.y, p.r, 0.1, 0.1, sprite.image:getWidth() / 2, sprite.image:getHeight() / 2)
+			love.graphics.draw(sprite.image, p.x, p.y, p.r, 0.05, 0.05, sprite.image:getWidth() / 2, sprite.image:getHeight() / 2)
 		end
 	end
 end
@@ -109,6 +107,7 @@ function game:gamepadreleased(gamepad, button)
 end
 
 function game:update(dt)
+	self.world:update(dt)
 	self.map:update(dt)
 end
 
@@ -117,9 +116,12 @@ function game:draw()
     s = 2
 	-- Draw the map and all objects within
 	love.graphics.setColor(255, 255, 255)
-	self.map:draw(tx, ty, s)
+	-- self.map:draw(tx, ty, s)
 
 	-- Draw Collision Map (useful for debugging)
 	love.graphics.setColor(255, 0, 0)
-	self.map:box2d_draw(tx, ty, s)
+	-- self.map:box2d_draw(tx, ty, s)
+
+	-- love.graphics.setBackgroundColor(0.41, 0.53, 0.97)
+	self.players['p1']:draw()
 end
