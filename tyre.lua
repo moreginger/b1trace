@@ -2,6 +2,7 @@ constants = require 'constants'
 vector = require 'hump.vector'
 
 Tyre = {
+    dr = 1,
     radius = constants.tyre_radius,
     width = constants.tyre_width,
     body = nil,
@@ -9,13 +10,12 @@ Tyre = {
 }
 
 function Tyre:init(world)
-    self.body = love.physics.newBody(world, 100, 100, 'dynamic')
+    self.body = love.physics.newBody(world, 300, 100, 'dynamic')
+    self.body:setLinearDamping(constants.tyre_damping)
+
     self.shape = love.physics.newRectangleShape(self.width, self.radius * 2)
     love.physics.newFixture(self.body, self.shape, 1)
     self.body:setUserData(self)
-
-    self.body:applyLinearImpulse(0, 3)
-    self.body:applyAngularImpulse(0.5)
 end
 
 function Tyre:destroy()
@@ -23,20 +23,32 @@ function Tyre:destroy()
     self.shape.destroy()
 end
 
-function Tyre:update(dt)
-    -- TODO use dt
-    self:updateFriction()
-end
-
-function Tyre:getLateralVelocity()
-    local vecN = vector(self.body:getWorldVector(1, 0))
+function Tyre:getVelocityOn(v)
+    local vecN = vector(self.body:getWorldVector(v.x, v.y))
     return vecN * vector(self.body:getLinearVelocity()) * vecN
 end
 
-function Tyre:updateFriction()
-    local i = self.body:getMass() * -self:getLateralVelocity()
-    self.body:applyLinearImpulse(i.x, i.y)
-    self.body:applyAngularImpulse(0.1 * self.body:getInertia() * -self.body:getAngularVelocity())
+function Tyre:control()
+    self.dr = -self.dr
+end
+
+function Tyre:applyLinearImpulse(v)
+    self.body:applyLinearImpulse(v.x, v.y)
+end
+
+function Tyre:update(dt)
+    local body = self.body;
+
+    -- Correct direction
+    self:applyLinearImpulse(body:getMass() * -self:getVelocityOn(vector(1, 0)))
+
+    -- Drive
+    self:applyLinearImpulse(dt * constants.tyre_linear_delta * vector(body:getWorldVector(0, 1)))
+
+    -- Steering
+    self.body:applyAngularImpulse(dt * constants.tyre_angular_delta * self.dr)
+    local angularOver = math.max(-constants.tyre_max_angular, math.min(constants.tyre_max_angular, self.body:getAngularVelocity()))
+    self.body:applyAngularImpulse(-angularOver)
 end
 
 function Tyre:draw()

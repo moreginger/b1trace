@@ -23,10 +23,7 @@ end
 -- end
 
 function Player:control()
-    local brake = 0.5
-    self.dr = -self.dr
-    self.vx = self.vx * (1 - brake)
-    self.vy = self.vy * (1 - brake)
+    self.tyre:control()
 end
 
 function Player:draw()
