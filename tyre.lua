@@ -1,4 +1,5 @@
 constants = require 'constants'
+log = require 'log'
 vector = require 'hump.vector'
 
 Tyre = {
@@ -7,6 +8,7 @@ Tyre = {
     width = constants.tyre_width,
     body = nil,
     shape = nil,
+    brakes = {},
 }
 
 function Tyre:init(world)
@@ -30,6 +32,9 @@ end
 
 function Tyre:control()
     self.dr = -self.dr
+
+    -- TODO max brakes
+    self.brakes[#self.brakes+1]=constants.tyre_brake_total
 end
 
 function Tyre:applyLinearImpulse(v)
@@ -37,26 +42,40 @@ function Tyre:applyLinearImpulse(v)
 end
 
 function Tyre:update(dt)
-    local body = self.body;
+    local body, brakes = self.body, self.brakes;
 
     -- Correct direction
     self:applyLinearImpulse(body:getMass() * -self:getVelocityOn(vector(1, 0)))
-
-    -- Drive
-    self:applyLinearImpulse(dt * constants.tyre_linear_delta * vector(body:getWorldVector(0, 1)))
 
     -- Steering
     self.body:applyAngularImpulse(dt * constants.tyre_angular_delta * self.dr)
     local angularOver = math.max(-constants.tyre_max_angular, math.min(constants.tyre_max_angular, self.body:getAngularVelocity()))
     self.body:applyAngularImpulse(-angularOver)
+
+    -- Drive
+    self:applyLinearImpulse(dt * constants.tyre_linear_delta * vector(body:getWorldVector(0, 1)))
+
+    -- Brakes
+    local brakeImpulse = 0
+    for i=#brakes,1,-1 do
+        local b = math.min(dt * constants.tyre_brake_delta, brakes[i])
+        brakeImpulse = brakeImpulse + b
+        brakes[i] = brakes[i] - b
+        if brakes[i] <= 0 then
+            table.remove(brakes, i)
+        end
+    end
+
+    self:applyLinearImpulse(brakeImpulse * vector(body:getWorldVector(0, -1)))
+
+    -- Debug
+    -- log.info('brakeImpulse' .. brakeImpulse)
 end
 
 function Tyre:draw()
     love.graphics.setColor(1, 1, 1)
     love.graphics.polygon('fill', self.body:getWorldPoints(self.shape:getPoints()))
     x, y = self.body:getWorldPoints(self.shape:getPoints())
-    love.graphics.print(x, 10, 0)
-    love.graphics.print(y, 10, 20)
 end
 
 function Tyre:new (o)
