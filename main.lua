@@ -42,43 +42,13 @@ function game:enter()
 	windowHeight = love.graphics.getHeight()
 
 	-- Load a map exported to Lua from Tiled
-	self.map = sti("assets/maps/map.lua", { "box2d" })
+	self.map = sti("assets/maps/track_magic_burst.lua", { "box2d" })
 
 	-- Prepare collision objects
 	self.map:box2d_init(self.world)
 
 	-- Create a Custom Layer
 	self.map:addCustomLayer("Sprite Layer", 3)
-
-	-- Add data to Custom Layer
-	local spriteLayer = self.map.layers["Sprite Layer"]
-	spriteLayer.sprites = {
-		player = {
-			image = love.graphics.newImage("assets/sprites/Porsche_911/sprite.png"),
-			-- TODO useful to set xyz here?
-			-- x = 0,
-			-- y = 0,
-			-- r = 0,
-		}
-	}
-
-	local players = self.players; -- TODO: Work out where to store this, in layer or what?
-
-	-- Update callback for Custom Layer
-	function spriteLayer:update(dt)
-		for _, sprite in pairs(self.sprites) do
-			players['p1']:update(dt)
-			-- sprite.r = sprite.r + math.rad(90 * dt)
-		end
-	end
-
-	-- Draw callback for Custom Layer
-	function spriteLayer:draw()
-		for _, sprite in pairs(self.sprites) do
-			local p = players['p1'];
-			love.graphics.draw(sprite.image, p.x, p.y, p.r, 0.05, 0.05, sprite.image:getWidth() / 2, sprite.image:getHeight() / 2)
-		end
-	end
 end
 
 function game:inputHandler(input)
@@ -107,16 +77,17 @@ function game:gamepadreleased(gamepad, button)
 end
 
 function game:update(dt)
+	self.players['p1']:update(dt)
 	self.world:update(dt)
 	self.map:update(dt)
 end
 
 function game:draw()
     tx, ty = 0
-    s = 2
+    s = 1
 	-- Draw the map and all objects within
 	love.graphics.setColor(255, 255, 255)
-	-- self.map:draw(tx, ty, s)
+	self.map:draw(tx, ty, s)
 
 	-- Draw Collision Map (useful for debugging)
 	love.graphics.setColor(255, 0, 0)
