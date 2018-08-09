@@ -3,8 +3,9 @@
 local sti = require "sti"
 local Gamestate = require "hump.gamestate"
 
-local Tyre = require 'tyre'
+local Chassis = require 'chassis'
 local Player = require 'player'
+local Tyre = require 'tyre'
 
 local game = {};
 
@@ -18,7 +19,9 @@ function game:init()
 	self.world = love.physics.newWorld(0, 0, true)
 	self.players = {}
 	local player = Player:new({
-		tyre = Tyre:new(),
+		chassis = Chassis:new(),
+		frontTyre = Tyre:new(),
+		rearTyre = Tyre:new(),
 	})
 	player:init(self.world)
 	player:draw()

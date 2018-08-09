@@ -11,9 +11,9 @@ Tyre = {
     brakes = {},
 }
 
-function Tyre:init(world)
-    self.body = love.physics.newBody(world, 300, 100, 'dynamic')
-    self.body:setLinearDamping(constants.tyre_damping)
+function Tyre:init(world, x, y)
+    self.body = love.physics.newBody(world, x, y, 'dynamic')
+    self.body:setLinearDamping(constants.linear_damping)
 
     self.shape = love.physics.newRectangleShape(self.width, self.radius * 2)
     love.physics.newFixture(self.body, self.shape, 1)
@@ -75,7 +75,6 @@ end
 function Tyre:draw()
     love.graphics.setColor(1, 1, 1)
     love.graphics.polygon('fill', self.body:getWorldPoints(self.shape:getPoints()))
-    x, y = self.body:getWorldPoints(self.shape:getPoints())
 end
 
 function Tyre:new (o)
